@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Database Connection Test</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    body {
+      font-family: system-ui, -apple-system, sans-serif;
+      max-width: 800px;
+      margin: 50px auto;
+      padding: 20px;
+      background: #f5f5f5;
+    }
+    .card {
+      background: white;
+      padding: 20px;
+      border-radius: 8px;
+      margin-bottom: 20px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    .success { color: #10b981; }
+    .error { color: #ef4444; }
+    .warning { color: #f59e0b; }
+    button {
+      background: #3b82f6;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 6px;
+      cursor: pointer;
+      margin: 5px;
+    }
+    button:hover { background: #2563eb; }
+    pre {
+      background: #1f2937;
+      color: #f3f4f6;
+      padding: 15px;
+      border-radius: 6px;
+      overflow-x: auto;
+    }
+    .test-item {
+      padding: 10px;
+      margin: 5px 0;
+      border-left: 4px solid #e5e7eb;
+      background: #f9fafb;
+    }
+    .test-item.pass { border-color: #10b981; }
+    .test-item.fail { border-color: #ef4444; }
+  </style>
+</head>
+<body>
+  <h1>🔍 Database Connection Test</h1>
+  
+  <div class="card">
+    <h2>Connection Status</h2>
+    <div id="connection-status">Testing...</div>
+  </div>
+
+  <div class="card">
+    <h2>Quick Tests</h2>
+    <button onclick="testConnection()">Test Connection</button>
+    <button onclick="testTables()">Test Tables</button>
+    <button onclick="testAuth()">Test Auth</button>
+    <button onclick="testAll()">Run All Tests</button>
+  </div>
+
+  <div class="card">
+    <h2>Test Results</h2>
+    <div id="results"></div>
+  </div>
+
+  <script>
+    const SUPABASE_URL = 'https://vdurubjfcydizfehvxoh.supabase.co'
+    const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZkdXJ1YmpmY3lkaXpmZWh2eG9oIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE0MjIwNjYsImV4cCI6MjA4Njk5ODA2Nn0.FFLSd8xwq0IqTW6GfhxX7bizA7FldJ5MZJbpDIrdAuE'
+
+    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY)
+
+    function log(message, type = 'info') {
+      const results = document.getElementById('results')
+      const div = document.createElement('div')
+      div.className = `test-item ${type}`
+      div.innerHTML = message
+      results.appendChild(div)
+    }
+
+    function clear() {
+      document.getElementById('results').innerHTML = ''
+    }
+
+    async function testConnection() {
+      clear()
+      log('🔌 Testing Supabase connection...', 'info')
+      
+      try {
+        const { data, error } = await supabase.from('courses').select('count', { count: 'exact', head: true })
+        
+        if (error) {
+          log(`❌ Connection failed: ${error.message}`, 'fail')
+          log(`<pre>${JSON.stringify(error, null, 2)}</pre>`, 'fail')
+        } else {
+          log('✅ Connection successful!', 'pass')
+        }
+      } catch (err) {
+        log(`❌ Error: ${err.message}`, 'fail')
+      }
+    }
+
+    async function testTables() {
+      clear()
+      log('📊 Testing database tables...', 'info')
+      
+      const tables = [
+        'courses',
+        'enrollments',
+        'live_classes',
+        'tests',
+        'assignments',
+        'announcements',
+        'messages',
+        'profiles'
+      ]
+
+      for (const table of tables) {
+        try {
+          const { data, error } = await supabase
+            .from(table)
+            .select('*', { count: 'exact', head: true })
+          
+          if (error) {
+            if (error.code === '42P01') {
+              log(`❌ Table "${table}" does not exist`, 'fail')
+            } else if (error.code === '42501') {
+              log(`⚠️ Table "${table}" exists but permission denied (RLS issue)`, 'warning')
+            } else {
+              log(`❌ Table "${table}": ${error.message}`, 'fail')
+            }
+          } else {
+            log(`✅ Table "${table}" exists and accessible`, 'pass')
+          }
+        } catch (err) {
+          log(`❌ Table "${table}": ${err.message}`, 'fail')
+        }
+      }
+    }
+
+    async function testAuth() {
+      clear()
+      log('🔐 Testing authentication...', 'info')
+      
+      try {
+        const { data: { user }, error } = await supabase.auth.getUser()
+        
+        if (error) {
+          log(`⚠️ Not authenticated: ${error.message}`, 'warning')
+        } else if (user) {
+          log(`✅ Authenticated as: ${user.email}`, 'pass')
+          log(`<pre>${JSON.stringify(user, null, 2)}</pre>`, 'pass')
+        } else {
+          log('⚠️ No user logged in', 'warning')
+        }
+      } catch (err) {
+        log(`❌ Auth error: ${err.message}`, 'fail')
+      }
+    }
+
+    async function testAll() {
+      await testConnection()
+      await new Promise(resolve => setTimeout(resolve, 500))
+      await testTables()
+      await new Promise(resolve => setTimeout(resolve, 500))
+      await testAuth()
+    }
+
+    // Auto-run on load
+    window.onload = () => {
+      document.getElementById('connection-status').innerHTML = 
+        '<span class="success">✅ Supabase client initialized</span>'
+      testAll()
+    }
+  </script>
+</body>
+</html>

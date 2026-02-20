@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Supabase Connection Test</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    body {
+      font-family: system-ui, -apple-system, sans-serif;
+      max-width: 800px;
+      margin: 50px auto;
+      padding: 20px;
+      background: #f5f5f5;
+    }
+    .card {
+      background: white;
+      padding: 30px;
+      border-radius: 12px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      margin-bottom: 20px;
+    }
+    h1 { color: #333; margin-top: 0; }
+    h2 { color: #666; font-size: 18px; margin-top: 0; }
+    button {
+      background: #10b981;
+      color: white;
+      border: none;
+      padding: 12px 24px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 16px;
+      margin-right: 10px;
+      margin-bottom: 10px;
+    }
+    button:hover { background: #059669; }
+    button:disabled { background: #ccc; cursor: not-allowed; }
+    .result {
+      margin-top: 15px;
+      padding: 15px;
+      border-radius: 8px;
+      font-family: monospace;
+      font-size: 14px;
+      white-space: pre-wrap;
+      word-break: break-all;
+    }
+    .success { background: #d1fae5; color: #065f46; }
+    .error { background: #fee2e2; color: #991b1b; }
+    .info { background: #dbeafe; color: #1e40af; }
+    input {
+      width: 100%;
+      padding: 10px;
+      border: 2px solid #e5e7eb;
+      border-radius: 8px;
+      font-size: 14px;
+      margin-bottom: 10px;
+    }
+    label {
+      display: block;
+      margin-bottom: 5px;
+      font-weight: 600;
+      color: #374151;
+    }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>🔧 Supabase Connection Tester</h1>
+    <p>Test your Supabase connection and authentication</p>
+  </div>
+
+  <div class="card">
+    <h2>1. Configuration</h2>
+    <label>Supabase URL:</label>
+    <input type="text" id="supabaseUrl" placeholder="https://your-project.supabase.co">
+    
+    <label>Supabase Anon Key:</label>
+    <input type="text" id="supabaseKey" placeholder="Your anon key">
+    
+    <button onclick="testConnection()">Test Connection</button>
+    <div id="connectionResult"></div>
+  </div>
+
+  <div class="card">
+    <h2>2. Test Signup</h2>
+    <label>Email:</label>
+    <input type="email" id="signupEmail" placeholder="test@example.com">
+    
+    <label>Password:</label>
+    <input type="password" id="signupPassword" placeholder="password123">
+    
+    <label>Full Name:</label>
+    <input type="text" id="signupName" placeholder="Test User">
+    
+    <button onclick="testSignup()">Test Signup</button>
+    <button onclick="testTeacherSignup()">Test Teacher Signup</button>
+    <div id="signupResult"></div>
+  </div>
+
+  <div class="card">
+    <h2>3. Test Login</h2>
+    <label>Email:</label>
+    <input type="email" id="loginEmail" placeholder="test@example.com">
+    
+    <label>Password:</label>
+    <input type="password" id="loginPassword" placeholder="password123">
+    
+    <button onclick="testLogin()">Test Login</button>
+    <div id="loginResult"></div>
+  </div>
+
+  <div class="card">
+    <h2>4. Check Auth Settings</h2>
+    <button onclick="checkAuthSettings()">Check Settings</button>
+    <div id="settingsResult"></div>
+  </div>
+
+  <script>
+    let supabase = null;
+
+    function initSupabase() {
+      const url = document.getElementById('supabaseUrl').value;
+      const key = document.getElementById('supabaseKey').value;
+      
+      if (!url || !key) {
+        alert('Please enter Supabase URL and Key');
+        return false;
+      }
+      
+      supabase = window.supabase.createClient(url, key);
+      return true;
+    }
+
+    async function testConnection() {
+      if (!initSupabase()) return;
+      
+      const result = document.getElementById('connectionResult');
+      result.innerHTML = '<div class="result info">Testing connection...</div>';
+      
+      try {
+        const { data, error } = await supabase.auth.getSession();
+        
+        if (error) {
+          result.innerHTML = `<div class="result error">❌ Connection Error:\n${error.message}</div>`;
+        } else {
+          result.innerHTML = `<div class="result success">✅ Connection Successful!\nSession: ${data.session ? 'Active' : 'No active session'}</div>`;
+        }
+      } catch (err) {
+        result.innerHTML = `<div class="result error">❌ Error:\n${err.message}</div>`;
+      }
+    }
+
+    async function testSignup() {
+      if (!initSupabase()) return;
+      
+      const email = document.getElementById('signupEmail').value;
+      const password = document.getElementById('signupPassword').value;
+      const name = document.getElementById('signupName').value;
+      const result = document.getElementById('signupResult');
+      
+      if (!email || !password || !name) {
+        alert('Please fill all fields');
+        return;
+      }
+      
+      result.innerHTML = '<div class="result info">Creating account...</div>';
+      
+      try {
+        const { data, error } = await supabase.auth.signUp({
+          email,
+          password,
+          options: {
+            data: {
+              full_name: name,
+              role: 'student'
+            }
+          }
+        });
+        
+        if (error) {
+          result.innerHTML = `<div class="result error">❌ Signup Error:\n${error.message}\n\nStatus: ${error.status || 'Unknown'}</div>`;
+        } else {
+          result.innerHTML = `<div class="result success">✅ Signup Successful!\nUser ID: ${data.user?.id}\nEmail: ${data.user?.email}\nConfirmed: ${data.user?.email_confirmed_at ? 'Yes' : 'No'}</div>`;
+        }
+      } catch (err) {
+        result.innerHTML = `<div class="result error">❌ Error:\n${err.message}</div>`;
+      }
+    }
+
+    async function testTeacherSignup() {
+      if (!initSupabase()) return;
+      
+      const email = document.getElementById('signupEmail').value;
+      const password = document.getElementById('signupPassword').value;
+      const name = document.getElementById('signupName').value;
+      const result = document.getElementById('signupResult');
+      
+      if (!email || !password || !name) {
+        alert('Please fill all fields');
+        return;
+      }
+      
+      result.innerHTML = '<div class="result info">Creating teacher account...</div>';
+      
+      try {
+        const { data, error } = await supabase.auth.signUp({
+          email,
+          password,
+          options: {
+            data: {
+              full_name: name,
+              role: 'teacher',
+              specialization: 'Chemistry',
+              experience_years: 5,
+              bio: 'Test teacher bio'
+            }
+          }
+        });
+        
+        if (error) {
+          result.innerHTML = `<div class="result error">❌ Teacher Signup Error:\n${error.message}\n\nStatus: ${error.status || 'Unknown'}</div>`;
+        } else {
+          result.innerHTML = `<div class="result success">✅ Teacher Signup Successful!\nUser ID: ${data.user?.id}\nEmail: ${data.user?.email}\nRole: ${data.user?.user_metadata?.role}\nConfirmed: ${data.user?.email_confirmed_at ? 'Yes' : 'No'}</div>`;
+        }
+      } catch (err) {
+        result.innerHTML = `<div class="result error">❌ Error:\n${err.message}</div>`;
+      }
+    }
+
+    async function testLogin() {
+      if (!initSupabase()) return;
+      
+      const email = document.getElementById('loginEmail').value;
+      const password = document.getElementById('loginPassword').value;
+      const result = document.getElementById('loginResult');
+      
+      if (!email || !password) {
+        alert('Please fill all fields');
+        return;
+      }
+      
+      result.innerHTML = '<div class="result info">Logging in...</div>';
+      
+      try {
+        const { data, error } = await supabase.auth.signInWithPassword({
+          email,
+          password
+        });
+        
+        if (error) {
+          result.innerHTML = `<div class="result error">❌ Login Error:\n${error.message}</div>`;
+        } else {
+          result.innerHTML = `<div class="result success">✅ Login Successful!\nUser ID: ${data.user?.id}\nEmail: ${data.user?.email}\nRole: ${data.user?.user_metadata?.role || 'Not set'}</div>`;
+        }
+      } catch (err) {
+        result.innerHTML = `<div class="result error">❌ Error:\n${err.message}</div>`;
+      }
+    }
+
+    function checkAuthSettings() {
+      const result = document.getElementById('settingsResult');
+      result.innerHTML = `<div class="result info">
+⚙️ Required Supabase Settings:
+
+1. Go to Supabase Dashboard
+2. Navigate to: Authentication → Providers → Email
+3. Check these settings:
+
+✅ Enable email provider: ON
+❌ Confirm email: OFF (IMPORTANT!)
+✅ Enable sign ups: ON
+
+4. Click "Save"
+
+If "Confirm email" is ON, you'll get rate limit errors!
+      </div>`;
+    }
+
+    // Auto-load from .env if available
+    window.addEventListener('load', () => {
+      // Try to get from localStorage
+      const savedUrl = localStorage.getItem('supabaseUrl');
+      const savedKey = localStorage.getItem('supabaseKey');
+      
+      if (savedUrl) document.getElementById('supabaseUrl').value = savedUrl;
+      if (savedKey) document.getElementById('supabaseKey').value = savedKey;
+      
+      // Save on change
+      document.getElementById('supabaseUrl').addEventListener('change', (e) => {
+        localStorage.setItem('supabaseUrl', e.target.value);
+      });
+      document.getElementById('supabaseKey').addEventListener('change', (e) => {
+        localStorage.setItem('supabaseKey', e.target.value);
+      });
+    });
+  </script>
+</body>
+</html>

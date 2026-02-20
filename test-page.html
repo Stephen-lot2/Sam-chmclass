@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Page - Samuel ChemLab</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .card {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 { color: #0ea5e9; }
+        .success { color: #22c55e; font-size: 24px; }
+        .checklist { margin: 20px 0; }
+        .checklist li { margin: 10px 0; padding: 10px; background: #f0f9ff; border-radius: 5px; }
+        button {
+            background: #0ea5e9;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 10px 5px;
+        }
+        button:hover { background: #0284c7; }
+        .error { color: #ef4444; }
+        .warning { color: #f97316; background: #fff7ed; padding: 15px; border-radius: 8px; margin: 15px 0; }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <h1>🧪 Samuel ChemLab - Setup Test</h1>
+        <p class="success">✅ If you can see this page, your browser is working!</p>
+        
+        <h2>Quick Checklist:</h2>
+        <ul class="checklist">
+            <li>✅ Browser is working</li>
+            <li>✅ HTML files can be opened</li>
+            <li id="node-check">⏳ Checking Node.js...</li>
+            <li id="npm-check">⏳ Checking npm...</li>
+            <li id="server-check">⏳ Checking dev server...</li>
+        </ul>
+
+        <div class="warning">
+            <strong>⚠️ Important:</strong> This is just a test page. Your actual app runs on:
+            <br><br>
+            <strong>http://localhost:5173</strong>
+            <br><br>
+            Make sure you've run <code>npm run dev</code> in your terminal first!
+        </div>
+
+        <h2>Next Steps:</h2>
+        <ol>
+            <li>Open your terminal in the project folder</li>
+            <li>Run: <code>npm install</code> (if you haven't already)</li>
+            <li>Run: <code>npm run dev</code></li>
+            <li>Open: <code>http://localhost:5173</code> in your browser</li>
+        </ol>
+
+        <h2>Common Issues:</h2>
+        <details>
+            <summary><strong>Blank white screen</strong></summary>
+            <p>Solution: Clear browser cache (Ctrl+Shift+Delete) and refresh</p>
+        </details>
+        
+        <details>
+            <summary><strong>"Cannot GET /"</strong></summary>
+            <p>Solution: Try going to http://localhost:5173/login instead</p>
+        </details>
+        
+        <details>
+            <summary><strong>Module errors</strong></summary>
+            <p>Solution: Delete node_modules folder and run <code>npm install</code> again</p>
+        </details>
+
+        <button onclick="window.location.href='http://localhost:5173'">
+            Open App (if server is running)
+        </button>
+        
+        <button onclick="window.location.href='http://localhost:5173/login'">
+            Open Login Page
+        </button>
+    </div>
+
+    <script>
+        // Simple checks
+        setTimeout(() => {
+            document.getElementById('node-check').innerHTML = '❓ Run <code>node --version</code> in terminal to check';
+            document.getElementById('npm-check').innerHTML = '❓ Run <code>npm --version</code> in terminal to check';
+            document.getElementById('server-check').innerHTML = '❓ Run <code>npm run dev</code> in terminal to start';
+        }, 1000);
+    </script>
+</body>
+</html>
